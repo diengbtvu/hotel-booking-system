@@ -1,4 +1,5 @@
-const baseUrl = "http://localhost:8080";
+// Use relative path for API calls - nginx will proxy to backend
+const baseUrl = process.env.NODE_ENV === 'production' ? "/api" : "http://localhost:8080";
 export { login, getAllRoomTypes };
 
 const login = (username, password) => {

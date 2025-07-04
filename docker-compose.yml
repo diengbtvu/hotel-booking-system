@@ -1,0 +1,55 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hotel-booking-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: hotel_booking
+      MYSQL_USER: hotel_user
+      MYSQL_PASSWORD: hotel_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - hotel-booking-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hotel-booking-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - hotel-booking-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./hotel-booking-frontend
+      dockerfile: Dockerfile
+    container_name: hotel-booking-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - hotel-booking-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  hotel-booking-network:
+    driver: bridge
